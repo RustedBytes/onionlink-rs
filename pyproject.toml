@@ -1,0 +1,36 @@
+[build-system]
+requires = [
+    "maturin>=1.8,<2",
+]
+build-backend = "maturin"
+
+[project]
+name = "onionlink"
+version = "0.1.0"
+description = "Linux-only Python bindings for the onionlink Tor v3 onion-service client"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "onionlink contributors" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Rust",
+    "Topic :: Internet",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.maturin]
+bindings = "pyo3"
+manifest-path = "crates/onionlink-py/Cargo.toml"
+module-name = "onionlink._native"
+python-source = "src"

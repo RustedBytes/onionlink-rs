@@ -1,0 +1,13 @@
+target/
+dist/
+.git/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.egg-info/
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+

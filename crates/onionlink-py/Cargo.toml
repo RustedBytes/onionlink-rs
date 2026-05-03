@@ -1,0 +1,17 @@
+[package]
+name = "onionlink-py"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "_native"
+crate-type = ["cdylib"]
+
+[dependencies]
+onionlink-core = { path = "../onionlink-core" }
+pyo3 = { version = "0.27", features = ["extension-module"] }
+
+[build-dependencies]
+pyo3-build-config = "0.27"

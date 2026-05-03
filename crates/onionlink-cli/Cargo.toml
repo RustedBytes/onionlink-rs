@@ -1,0 +1,15 @@
+[package]
+name = "onionlink-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "onionlink"
+path = "src/main.rs"
+
+[dependencies]
+env_logger = "0.11"
+log = "0.4"
+onionlink-core = { path = "../onionlink-core" }

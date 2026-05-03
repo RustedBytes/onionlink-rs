@@ -1,0 +1,2 @@
+include src/onionlink/_native.pyi
+include src/onionlink/py.typed

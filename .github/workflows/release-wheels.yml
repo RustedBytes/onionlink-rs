@@ -1,0 +1,49 @@
+name: Release wheels
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    name: Build and upload wheels
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build wheels with Docker
+        run: |
+          rm -rf dist
+          docker build \
+            --platform linux/amd64 \
+            --target wheels \
+            --output type=local,dest=dist \
+            .
+
+      - name: List built wheels
+        run: |
+          find dist -maxdepth 1 -type f -name '*.whl' -print -exec ls -lh {} \;
+          test -n "$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
+
+      - name: Create release if needed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG_NAME" >/dev/null 2>&1 || \
+            gh release create "$TAG_NAME" \
+              --title "$TAG_NAME" \
+              --notes "Wheels for $TAG_NAME"
+
+      - name: Upload wheels to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release upload "$TAG_NAME" dist/*.whl --clobber

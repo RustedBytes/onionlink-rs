@@ -1,0 +1,14 @@
+/build/
+/target/
+/dist/
+*.egg-info/
+*.pyc
+.pytest_cache/
+__pycache__/
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+.idea/
+.vscode/
