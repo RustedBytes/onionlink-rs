@@ -13,3 +13,4 @@ __pycache__/
 .idea/
 .vscode/
 src/onionlink/_native.cpython-313-darwin.so
+src/onionlink/_native.cpython-39-darwin.so
