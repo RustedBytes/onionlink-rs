@@ -1,9 +1,13 @@
 [package]
 name = "onionlink-cli"
+description = "Command-line client for testing Tor v3 onion-service connections with onionlink"
+documentation = "https://docs.rs/onionlink-cli"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+readme.workspace = true
+rust-version.workspace = true
 
 [[bin]]
 name = "onionlink"
@@ -12,4 +16,4 @@ path = "src/main.rs"
 [dependencies]
 env_logger = "0.11"
 log = "0.4"
-onionlink-core = { path = "../onionlink-core" }
+onionlink-core = { version = "0.1.1", path = "../onionlink-core" }

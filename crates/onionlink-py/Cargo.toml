@@ -1,16 +1,20 @@
 [package]
 name = "onionlink-py"
+description = "PyO3 extension module for the onionlink Tor v3 onion-service client"
+documentation = "https://docs.rs/onionlink-py"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+readme.workspace = true
+rust-version.workspace = true
 
 [lib]
 name = "_native"
 crate-type = ["cdylib"]
 
 [dependencies]
-onionlink-core = { path = "../onionlink-core" }
+onionlink-core = { version = "0.1.1", path = "../onionlink-core" }
 pyo3 = { version = "0.28", features = ["extension-module"] }
 pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
 tokio = { version = "1.13", features = ["rt", "rt-multi-thread"] }

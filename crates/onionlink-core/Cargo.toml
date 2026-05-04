@@ -1,9 +1,13 @@
 [package]
 name = "onionlink-core"
+description = "Core Tor v3 onion-service client protocol implementation for onionlink"
+documentation = "https://docs.rs/onionlink-core"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+readme.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 aes = "0.8"
