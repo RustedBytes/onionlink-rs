@@ -85,17 +85,21 @@ jobs:
         include:
           - platform: windows-x64
             os: windows-2022
+            python-architecture: x64
             macos-deployment-target: ""
           - platform: macos-arm64
             os: macos-15
+            python-architecture: arm64
             macos-deployment-target: "11.0"
           - platform: macos-x64
-            os: macos-13
+            os: macos-15-intel
             python-version: "3.8"
+            python-architecture: x64
             macos-deployment-target: "10.12"
           - platform: macos-x64
-            os: macos-13
+            os: macos-15-intel
             python-version: "3.9"
+            python-architecture: x64
             macos-deployment-target: "10.12"
 
     defaults:
@@ -113,6 +117,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.python-architecture }}
 
       - name: Set up Rust
         run: |
