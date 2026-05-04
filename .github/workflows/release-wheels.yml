@@ -9,8 +9,24 @@ permissions:
   contents: write
 
 jobs:
-  build-and-upload:
-    name: Build and upload wheels
+  create-release:
+    name: Create release
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Create release if needed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG_NAME" >/dev/null 2>&1 || \
+            gh release create "$TAG_NAME" \
+              --title "$TAG_NAME" \
+              --notes "Wheels for $TAG_NAME"
+
+  build-linux-wheels:
+    name: Build Linux wheels
+    needs: create-release
     runs-on: ubuntu-24.04
 
     steps:
@@ -31,15 +47,82 @@ jobs:
           find dist -maxdepth 1 -type f -name '*.whl' -print -exec ls -lh {} \;
           test -n "$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
 
-      - name: Create release if needed
+      - name: Upload wheels to release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          gh release view "$TAG_NAME" >/dev/null 2>&1 || \
-            gh release create "$TAG_NAME" \
-              --title "$TAG_NAME" \
-              --notes "Wheels for $TAG_NAME"
+          gh release upload "$TAG_NAME" dist/*.whl --clobber
+
+  build-native-wheels:
+    name: Build ${{ matrix.platform }} ${{ matrix.python-version }} wheel
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2022
+          - macos-15
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.13t"
+          - "3.14"
+          - "3.14t"
+        include:
+          - platform: windows-x64
+            os: windows-2022
+            macos-deployment-target: ""
+          - platform: macos-arm64
+            os: macos-15
+            macos-deployment-target: "11.0"
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos-deployment-target }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Install maturin
+        run: |
+          python -m pip install --upgrade pip "maturin>=1.8,<2"
+
+      - name: Build wheel
+        run: |
+          rm -rf dist
+          python -m maturin build --release \
+            --locked \
+            --manifest-path crates/onionlink-py/Cargo.toml \
+            --interpreter python \
+            --out dist
+
+      - name: List built wheel
+        run: |
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          if [ "${#wheels[@]}" -eq 0 ]; then
+            echo "No wheels were built"
+            exit 1
+          fi
+          ls -lh "${wheels[@]}"
 
       - name: Upload wheels to release
         env:
