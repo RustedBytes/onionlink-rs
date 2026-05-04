@@ -24,7 +24,9 @@ Security and anonymity are explicit non-goals. This is a protocol experiment and
 - `maturin` for Python wheel builds
 
 The codebase is intended to be platform-agnostic; install the equivalent Rust,
-Python, and `maturin` tooling for your platform. Linux package examples:
+Python, and `maturin` tooling for your platform. The release workflow builds
+prebuilt wheels for Linux x86_64, Windows x64, and macOS ARM64. Other platforms
+can build from source with the same toolchain. Linux package examples:
 
 On Arch Linux:
 
@@ -39,21 +41,24 @@ sudo apt install build-essential curl python3 python3-pip
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
+Use your platform's Python launcher in place of `python` below if needed, such
+as `python3` or `py -3`.
+
 ## Build
 
 ```sh
 cargo build --workspace
 ```
 
-Build manylinux Python wheels with Docker:
+Build Linux x86_64 manylinux Python wheels with Docker:
 
 ```sh
 docker build --target wheels --output type=local,dest=dist .
 ```
 
-This writes Python 3.10+ manylinux wheels into `dist/`, including `cp313t`
-and `cp314t` free-threaded wheels. This Docker recipe targets Linux/manylinux
-and uses `maturin` to build the PyO3 extension.
+This writes Python 3.10+ x86_64 manylinux wheels into `dist/`, including
+`cp313t` and `cp314t` free-threaded wheels. This Docker recipe targets
+Linux/manylinux and uses `maturin` to build the PyO3 extension.
 
 Build a wheel directly on the current host with the native dependencies installed:
 
@@ -102,8 +107,8 @@ with ThreadPoolExecutor(max_workers=4) as pool:
 ```
 
 For native `asyncio` call sites, use `AsyncSession`. It keeps the synchronous
-API available and uses the native PyO3/Tokio awaitables when the compiled
-extension is available:
+API shape and uses native PyO3/Tokio awaitables when the extension exposes
+them, with an executor fallback for older bindings:
 
 ```python
 import asyncio
@@ -178,14 +183,17 @@ Request methods:
 
 - `request(method, onion, *, port=80, path="/", params=None, headers=None, body=None, data=None, json=None, form=None, host=None, http_version="HTTP/1.0", response_limit=4194304) -> Response`
 - `get/head/post/put/patch/delete/options(onion, **request_options) -> Response`
+- `http_get(onion, port=80, path="/", response_limit=4194304) -> bytes`
 - `raw_request(onion, port, payload=b"", response_limit=4194304) -> bytes`
+- `build_http_request(*, method, onion, path="/", headers=None, body=None, host=None, http_version="HTTP/1.0") -> bytes`
 
 `AsyncSession` exposes the same request methods as awaitables, plus
 `await AsyncSession.create(...)` for eager initialization and
-`async with AsyncSession(...)` for context-manager style initialization.
+`async with AsyncSession(...)` for context-manager style initialization. It also
+accepts an `executor` for the fallback path.
 
 `Response` exposes `status_code`, `reason`, `headers`, `body`, `raw`,
-`http_version`, `ok`, `text`, `encoding`, `header(name)`, and
+`http_version`, `ok`, `text`, `encoding`, `header(name, default=None)`, and
 `raise_for_status()`.
 
 ## Usage
@@ -194,10 +202,10 @@ Request methods:
 cargo run -p onionlink-cli -- <service-v3-address>.onion <port> [options]
 ```
 
-Fetch `/` over HTTP from the container:
+Fetch `/` over HTTP with the CLI:
 
 ```sh
-docker run --rm onionlink \
+cargo run -p onionlink-cli -- \
   archiveiya74codqgiixo33q62qlrqtkgmcitqx5u2oeqnmn5bpcbiyd.onion 80 \
   --http-get / \
   --verbose
