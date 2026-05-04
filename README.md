@@ -23,6 +23,9 @@ Security and anonymity are explicit non-goals. This is a protocol experiment and
 - Python 3.10 or newer for the Python package
 - `maturin` for Python wheel builds
 
+The codebase is intended to be platform-agnostic; install the equivalent Rust,
+Python, and `maturin` tooling for your platform. Linux package examples:
+
 On Arch Linux:
 
 ```sh
@@ -42,17 +45,17 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cargo build --workspace
 ```
 
-Build Linux Python wheels with Docker:
+Build manylinux Python wheels with Docker:
 
 ```sh
 docker build --target wheels --output type=local,dest=dist .
 ```
 
 This writes Python 3.10+ manylinux wheels into `dist/`, including `cp313t`
-and `cp314t` free-threaded wheels. The wheel build is Linux-only and uses
-`maturin` to build the PyO3 extension.
+and `cp314t` free-threaded wheels. This Docker recipe targets Linux/manylinux
+and uses `maturin` to build the PyO3 extension.
 
-Build a wheel directly on a Linux host with the native dependencies installed:
+Build a wheel directly on the current host with the native dependencies installed:
 
 ```sh
 python -m pip wheel . -w dist

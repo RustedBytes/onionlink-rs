@@ -7,14 +7,14 @@ build-backend = "maturin"
 [project]
 name = "onionlink"
 version = "0.1.1"
-description = "Linux-only Python bindings for the onionlink Tor v3 onion-service client"
+description = "Cross-platform Python bindings for the onionlink Tor v3 onion-service client"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "onionlink contributors" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Operating System :: POSIX :: Linux",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
