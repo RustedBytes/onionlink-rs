@@ -12,3 +12,4 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+src/onionlink/_native.cpython-313-darwin.so

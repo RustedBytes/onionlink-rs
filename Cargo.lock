@@ -410,7 +410,7 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
 name = "onionlink-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "env_logger",
  "log",
@@ -419,7 +419,7 @@ dependencies = [
 
 [[package]]
 name = "onionlink-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aes",
  "base64",
@@ -439,7 +439,7 @@ dependencies = [
 
 [[package]]
 name = "onionlink-py"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "onionlink-core",
  "pyo3",
