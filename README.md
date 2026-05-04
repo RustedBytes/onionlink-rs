@@ -19,7 +19,7 @@ Security and anonymity are explicit non-goals. This is a protocol experiment and
 
 ## Dependencies
 
-- Rust 1.74 or newer
+- Rust 1.83 or newer
 - Python 3.10 or newer for the Python package
 - `maturin` for Python wheel builds
 
@@ -48,8 +48,9 @@ Build Linux Python wheels with Docker:
 docker build --target wheels --output type=local,dest=dist .
 ```
 
-This writes Python 3.10+ manylinux wheels into `dist/`. The wheel build is
-Linux-only and uses `maturin` to build the PyO3 extension.
+This writes Python 3.10+ manylinux wheels into `dist/`, including `cp313t`
+and `cp314t` free-threaded wheels. The wheel build is Linux-only and uses
+`maturin` to build the PyO3 extension.
 
 Build a wheel directly on a Linux host with the native dependencies installed:
 
@@ -96,6 +97,37 @@ with ThreadPoolExecutor(max_workers=4) as pool:
     for body in pool.map(fetch, onions):
         print(body[:200])
 ```
+
+For native `asyncio` call sites, use `AsyncSession`. It keeps the synchronous
+API available and uses the native PyO3/Tokio awaitables when the compiled
+extension is available:
+
+```python
+import asyncio
+
+from onionlink import AsyncSession
+
+
+async def main() -> None:
+    async with AsyncSession(timeout_ms=30_000) as session:
+        response = await session.get(
+            "archiveiya74codqgiixo33q62qlrqtkgmcitqx5u2oeqnmn5bpcbiyd.onion",
+            port=80,
+            path="/",
+        )
+        print(response.status_code, response.body[:200])
+
+
+asyncio.run(main())
+```
+
+Cancelling an awaited async request stops waiting for its result, but the
+underlying native blocking task can continue until the request finishes or the
+configured `timeout_ms` is reached.
+
+The PyO3 extension declares `gil_used = false`, and native bootstrap/request
+work detaches from the Python runtime while running. Free-threaded wheels are
+therefore built for `py313t` and `py314t` without re-enabling the GIL on import.
 
 Raw request bytes are also supported:
 
@@ -144,6 +176,10 @@ Request methods:
 - `request(method, onion, *, port=80, path="/", params=None, headers=None, body=None, data=None, json=None, form=None, host=None, http_version="HTTP/1.0", response_limit=4194304) -> Response`
 - `get/head/post/put/patch/delete/options(onion, **request_options) -> Response`
 - `raw_request(onion, port, payload=b"", response_limit=4194304) -> bytes`
+
+`AsyncSession` exposes the same request methods as awaitables, plus
+`await AsyncSession.create(...)` for eager initialization and
+`async with AsyncSession(...)` for context-manager style initialization.
 
 `Response` exposes `status_code`, `reason`, `headers`, `body`, `raw`,
 `http_version`, `ok`, `text`, `encoding`, `header(name)`, and
