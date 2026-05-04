@@ -1,0 +1,67 @@
+name: Publish release wheels to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub release tag containing wheel assets
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish release wheels
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/onionlink
+    concurrency:
+      group: publish-pypi-${{ inputs.release_tag }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Download release wheels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" \
+            --repo "$GH_REPO" \
+            --pattern "*.whl" \
+            --dir dist
+
+      - name: Verify downloaded wheels
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          if [ "${#wheels[@]}" -eq 0 ]; then
+            echo "No wheels were downloaded"
+            exit 1
+          fi
+
+          expected_version="${RELEASE_TAG#v}"
+          for wheel in "${wheels[@]}"; do
+            filename="$(basename "$wheel")"
+            IFS="-" read -r _ wheel_version _ <<< "$filename"
+            if [ "$wheel_version" != "$expected_version" ]; then
+              echo "::error file=$wheel::Expected wheel version $expected_version from release tag $RELEASE_TAG, got $wheel_version"
+              exit 1
+            fi
+          done
+
+          ls -lh "${wheels[@]}"
+
+      - name: Publish wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          skip-existing: true
