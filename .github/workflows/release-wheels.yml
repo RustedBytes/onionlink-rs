@@ -68,6 +68,8 @@ jobs:
           - windows-2022
           - macos-15
         python-version:
+          - "3.8"
+          - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
@@ -75,6 +77,11 @@ jobs:
           - "3.13t"
           - "3.14"
           - "3.14t"
+        exclude:
+          - os: macos-15
+            python-version: "3.8"
+          - os: macos-15
+            python-version: "3.9"
         include:
           - platform: windows-x64
             os: windows-2022
@@ -82,6 +89,14 @@ jobs:
           - platform: macos-arm64
             os: macos-15
             macos-deployment-target: "11.0"
+          - platform: macos-x64
+            os: macos-13
+            python-version: "3.8"
+            macos-deployment-target: "10.12"
+          - platform: macos-x64
+            os: macos-13
+            python-version: "3.9"
+            macos-deployment-target: "10.12"
 
     defaults:
       run:

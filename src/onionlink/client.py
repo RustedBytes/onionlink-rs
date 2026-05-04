@@ -6,16 +6,28 @@ from concurrent.futures import Executor
 from dataclasses import dataclass
 from functools import partial
 from http import HTTPStatus
-from typing import Callable, Iterable, Mapping, Sequence, TypeVar
+from typing import (
+    Callable,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 from urllib.parse import urlencode
 
 from ._native import Session as _NativeSession
 
-Body = bytes | bytearray | memoryview | str | None
-HeaderPairs = Iterable[tuple[str, str]]
-Headers = Mapping[str, str] | HeaderPairs | None
-Params = Mapping[str, str | int | float | bool | None] | Sequence[tuple[str, str | int | float | bool | None]] | None
-Form = Mapping[str, str | int | float | bool | None] | Sequence[tuple[str, str | int | float | bool | None]] | None
+Body = Optional[Union[bytes, bytearray, memoryview, str]]
+HeaderPairs = Iterable[Tuple[str, str]]
+Headers = Optional[Union[Mapping[str, str], HeaderPairs]]
+ParamValue = Union[str, int, float, bool, None]
+Params = Optional[Union[Mapping[str, ParamValue], Sequence[Tuple[str, ParamValue]]]]
+Form = Optional[Union[Mapping[str, ParamValue], Sequence[Tuple[str, ParamValue]]]]
 
 _AsyncSessionT = TypeVar("_AsyncSessionT", bound="AsyncSession")
 _T = TypeVar("_T")
@@ -33,7 +45,7 @@ class Request:
     onion: str
     port: int
     path: str
-    headers: tuple[Header, ...]
+    headers: Tuple[Header, ...]
     body: bytes
     response_limit: int
     http_version: str
@@ -43,7 +55,7 @@ class Request:
 class Response:
     status_code: int
     reason: str
-    headers: tuple[Header, ...]
+    headers: Tuple[Header, ...]
     body: bytes
     raw: bytes
     http_version: str
@@ -57,7 +69,7 @@ class Response:
         return self.body.decode(self.encoding or "utf-8", errors="replace")
 
     @property
-    def encoding(self) -> str | None:
+    def encoding(self) -> Optional[str]:
         content_type = self.header("content-type")
         if not content_type:
             return None
@@ -67,7 +79,7 @@ class Response:
                 return value.strip("\"'")
         return None
 
-    def header(self, name: str, default: str | None = None) -> str | None:
+    def header(self, name: str, default: Optional[str] = None) -> Optional[str]:
         needle = name.lower()
         for header in reversed(self.headers):
             if header.name.lower() == needle:
@@ -132,7 +144,7 @@ class Session:
         data: Body = None,
         json: object = None,
         form: Form = None,
-        host: str | None = None,
+        host: Optional[str] = None,
         http_version: str = "HTTP/1.0",
         response_limit: int = 4 * 1024 * 1024,
     ) -> Response:
@@ -162,7 +174,7 @@ class Session:
         path: str = "/",
         headers: Headers = None,
         body: Body = None,
-        host: str | None = None,
+        host: Optional[str] = None,
         http_version: str = "HTTP/1.0",
     ) -> bytes:
         return _build_http_request(
@@ -227,25 +239,25 @@ class AsyncSession:
         timeout_ms: int = 30000,
         verbose: bool = False,
         *,
-        executor: Executor | None = None,
+        executor: Optional[Executor] = None,
     ) -> None:
         self._bootstrap = bootstrap
         self._consensus_file = consensus_file
         self._timeout_ms = timeout_ms
         self._verbose = verbose
         self._executor = executor
-        self._session: Session | None = None
-        self._init_lock: asyncio.Lock | None = None
+        self._session: Optional[Session] = None
+        self._init_lock: Optional[asyncio.Lock] = None
 
     @classmethod
     async def create(
-        cls: type[_AsyncSessionT],
+        cls: Type[_AsyncSessionT],
         bootstrap: str = "128.31.0.39:9131",
         consensus_file: str = "",
         timeout_ms: int = 30000,
         verbose: bool = False,
         *,
-        executor: Executor | None = None,
+        executor: Optional[Executor] = None,
     ) -> _AsyncSessionT:
         session = cls(
             bootstrap=bootstrap,
@@ -327,7 +339,7 @@ class AsyncSession:
         data: Body = None,
         json: object = None,
         form: Form = None,
-        host: str | None = None,
+        host: Optional[str] = None,
         http_version: str = "HTTP/1.0",
         response_limit: int = 4 * 1024 * 1024,
     ) -> Response:
@@ -357,7 +369,7 @@ class AsyncSession:
         path: str = "/",
         headers: Headers = None,
         body: Body = None,
-        host: str | None = None,
+        host: Optional[str] = None,
         http_version: str = "HTTP/1.0",
     ) -> bytes:
         return _build_http_request(
@@ -424,7 +436,7 @@ def parse_response(raw: bytes) -> Response:
     return Response(status_code, reason, headers, body, raw, http_version)
 
 
-def _parse_status_line(line: str) -> tuple[str, int, str]:
+def _parse_status_line(line: str) -> Tuple[str, int, str]:
     version, _, rest = line.partition(" ")
     code_text, _, reason = rest.partition(" ")
     try:
@@ -442,7 +454,7 @@ def _parse_header(line: bytes) -> Header:
     )
 
 
-def _normalize_headers(headers: Headers) -> tuple[tuple[str, str], ...]:
+def _normalize_headers(headers: Headers) -> Tuple[Tuple[str, str], ...]:
     if headers is None:
         return ()
     if isinstance(headers, Mapping):
@@ -457,7 +469,7 @@ def _build_http_request(
     path: str = "/",
     headers: Headers = None,
     body: Body = None,
-    host: str | None = None,
+    host: Optional[str] = None,
     http_version: str = "HTTP/1.0",
 ) -> bytes:
     method = method.upper()
@@ -481,7 +493,7 @@ def _prepare_body(
     data: Body,
     json: object,
     form: Form,
-    headers: list[tuple[str, str]],
+    headers: List[Tuple[str, str]],
 ) -> bytes:
     header_names = {name.lower() for name, _ in headers}
     if json is not None:
@@ -512,7 +524,7 @@ def _normalize_path(path: str, params: Params) -> str:
     return normalized
 
 
-def _iter_params(params: Params) -> Iterable[tuple[str, str | int | float | bool | None]]:
+def _iter_params(params: Params) -> Iterable[Tuple[str, ParamValue]]:
     if params is None:
         return ()
     if isinstance(params, Mapping):

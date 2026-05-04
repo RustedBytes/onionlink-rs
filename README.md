@@ -20,13 +20,14 @@ Security and anonymity are explicit non-goals. This is a protocol experiment and
 ## Dependencies
 
 - Rust 1.83 or newer
-- Python 3.10 or newer for the Python package
+- Python 3.8 or newer for the Python package
 - `maturin` for Python wheel builds
 
 The codebase is intended to be platform-agnostic; install the equivalent Rust,
 Python, and `maturin` tooling for your platform. The release workflow builds
-prebuilt wheels for Linux x86_64, Windows x64, and macOS ARM64. Other platforms
-can build from source with the same toolchain. Linux package examples:
+prebuilt wheels for Linux x86_64 and Windows x64 on Python 3.8+, macOS ARM64 on
+Python 3.10+, and macOS x86_64 on Python 3.8 and 3.9. Other platforms can build
+from source with the same toolchain. Linux package examples:
 
 On Arch Linux:
 
@@ -56,7 +57,7 @@ Build Linux x86_64 manylinux Python wheels with Docker:
 docker build --target wheels --output type=local,dest=dist .
 ```
 
-This writes Python 3.10+ x86_64 manylinux wheels into `dist/`, including
+This writes Python 3.8+ x86_64 manylinux wheels into `dist/`, including
 `cp313t` and `cp314t` free-threaded wheels. This Docker recipe targets
 Linux/manylinux and uses `maturin` to build the PyO3 extension.
 
@@ -85,7 +86,8 @@ The Python package exposes an OOP session API. A `Session` downloads the
 microdescriptor consensus and hydrates relay microdescriptors once, then reuses
 that directory state for multiple onion-service requests. Request methods release
 the Python GIL while doing network work, so one initialized session can be used
-from `asyncio.to_thread`, a `ThreadPoolExecutor`, or regular worker threads.
+from a `ThreadPoolExecutor`, regular worker threads, or `asyncio.to_thread` on
+Python versions that provide it.
 
 ```python
 from concurrent.futures import ThreadPoolExecutor

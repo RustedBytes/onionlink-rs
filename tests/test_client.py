@@ -3,14 +3,15 @@ from __future__ import annotations
 import asyncio
 import sys
 import types
+from typing import List, Tuple
 
 ONION = "exampleexampleexampleexampleexampleexampleexampleexampleexampleexample.onion"
 
 
 class _NativeSession:
-    instances: list[_NativeSession] = []
+    instances: List["_NativeSession"] = []
     async_creates = 0
-    async_requests: list[tuple[str, int, bytes, int]] = []
+    async_requests: List[Tuple[str, int, bytes, int]] = []
 
     def __init__(
         self,
@@ -23,7 +24,7 @@ class _NativeSession:
         self.consensus_file = consensus_file
         self.timeout_ms = timeout_ms
         self.verbose = verbose
-        self.requests: list[tuple[str, int, bytes, int]] = []
+        self.requests: List[Tuple[str, int, bytes, int]] = []
         self.instances.append(self)
 
     def request(
