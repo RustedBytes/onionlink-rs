@@ -17,10 +17,12 @@ jobs:
       - name: Create release if needed
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          gh release view "$TAG_NAME" >/dev/null 2>&1 || \
+          gh release view "$TAG_NAME" --repo "$GH_REPO" >/dev/null 2>&1 || \
             gh release create "$TAG_NAME" \
+              --repo "$GH_REPO" \
               --title "$TAG_NAME" \
               --notes "Wheels for $TAG_NAME"
 
@@ -50,9 +52,10 @@ jobs:
       - name: Upload wheels to release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          gh release upload "$TAG_NAME" dist/*.whl --clobber
+          gh release upload "$TAG_NAME" dist/*.whl --repo "$GH_REPO" --clobber
 
   build-native-wheels:
     name: Build ${{ matrix.platform }} ${{ matrix.python-version }} wheel
@@ -127,6 +130,7 @@ jobs:
       - name: Upload wheels to release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          gh release upload "$TAG_NAME" dist/*.whl --clobber
+          gh release upload "$TAG_NAME" dist/*.whl --repo "$GH_REPO" --clobber
